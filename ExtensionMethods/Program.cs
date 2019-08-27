@@ -1,12 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ExtensionMethods
 {
     public class Program
     {
-        static void Main(string[] args)
+        internal delegate string Andrei(string input);
+
+        internal static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Andrei delegateOne = MethodExample;
+            Console.WriteLine(delegateOne("Andrei"));
+
+            var list = new List<int> { 1, 2, 3, 4 };
+            foreach (var element in list.GetRange(0, 3).Select(n => n * n))
+            {
+                Console.WriteLine(element);
+            }
+
+            Console.Read();
+        }
+
+        static string MethodExample(string name)
+        {
+            return name + "1";
         }
     }
 }
