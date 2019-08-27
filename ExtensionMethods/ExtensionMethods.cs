@@ -8,7 +8,7 @@ namespace ExtensionMethods
         public static bool All<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
-            ThrowNullException(source);
+            ThrowNullSourceException(source);
 
             foreach (var element in source)
             {
@@ -24,7 +24,7 @@ namespace ExtensionMethods
         public static bool Any<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
-            ThrowNullException(source);
+            ThrowNullSourceException(source);
 
             foreach (var element in source)
             {
@@ -40,7 +40,7 @@ namespace ExtensionMethods
         public static TSource First<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
-            ThrowNullException(source);
+            ThrowNullSourceException(source);
 
             foreach (var element in source)
             {
@@ -56,8 +56,8 @@ namespace ExtensionMethods
         public static IEnumerable<TResult> Select<TSource, TResult>(
             this IEnumerable<TSource> source, Func<TSource, TResult> selector)
         {
-            ThrowNullException(source);
-            ThrowNullSelectorException(selector);
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(selector);
 
             foreach (var item in source)
             {
@@ -69,8 +69,8 @@ namespace ExtensionMethods
             this IEnumerable<TSource> source,
             Func<TSource, IEnumerable<TResult>> selector)
         {
-            ThrowNullException(source);
-            ThrowNullSelectorException(selector);
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(selector);
 
             foreach (var item in source)
             {
@@ -81,7 +81,69 @@ namespace ExtensionMethods
             }
         }
 
-        private static void ThrowNullSelectorException<TSource, TResult>(
+        public static Dictionary<TKey, TElement> ToDictionary<TSource, TKey, TElement>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TSource, TElement> elementSelector)
+        {
+            ThrowInputExceptions(source, keySelector, elementSelector);
+
+            var dictionary = new Dictionary<TKey, TElement>();
+            foreach (var element in source)
+            {
+                var newElement = new KeyValuePair<TKey, TElement>(keySelector(element), elementSelector(element));
+                ThrowKeyExceptions(newElement.Key, dictionary);
+
+                dictionary.Add(newElement.Key, newElement.Value);
+            }
+
+            return dictionary;
+        }
+
+        public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+        {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(predicate);
+
+            foreach (var item in source)
+            {
+                if (predicate(item))
+                {
+                    yield return item;
+                }
+            }
+        }
+
+        private static void ThrowInputExceptions<TSource, TKey, TElement>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector)
+        {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(keySelector);
+            ThrowNullDelegateException(elementSelector);
+        }
+
+        private static void ThrowKeyExceptions<TKey, TElement>(TKey key, Dictionary<TKey, TElement> dictionary)
+        {
+            ThrowKeyIsNullException(key);
+
+            if (!dictionary.ContainsKey(key))
+            {
+                return;
+            }
+
+            throw new ArgumentException("Could not add key duplicates!/t");
+        }
+
+        private static void ThrowKeyIsNullException<TKey>(TKey key)
+        {
+            if (key != null)
+            {
+                return;
+            }
+
+            throw new ArgumentNullException(paramName: nameof(key), message: "Key cannot be null!/t");
+        }
+
+        private static void ThrowNullDelegateException<TSource, TResult>(
             Func<TSource, TResult> selector)
         {
             if (selector != null)
@@ -92,7 +154,7 @@ namespace ExtensionMethods
             throw new ArgumentNullException(paramName: nameof(selector), message: "Selector cannot be null!/t");
         }
 
-        private static void ThrowNullException<TSource>(IEnumerable<TSource> source)
+        private static void ThrowNullSourceException<TSource>(IEnumerable<TSource> source)
         {
             if (source != null)
             {

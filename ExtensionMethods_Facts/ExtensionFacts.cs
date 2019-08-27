@@ -1,5 +1,6 @@
 using ExtensionMethods;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace ExtensionMethods_Facts
@@ -172,17 +173,16 @@ namespace ExtensionMethods_Facts
             //When
             var enumerator = names.SelectMany(x => new[] { x.ToLower() });
             //Then
-            Assert.Equal(new[] {"andrei", "ion", "vasile"}, enumerator);
+            Assert.Equal(new[] { "andrei", "ion", "vasile" }, enumerator);
         }
 
         [Fact]
         public void Test_SelectMany_ExtMethod_Should_Throw_Exception_When_Object_is_NULL()
         {
             //Given
-            string[] names = new string[3] { "Andrei", "Ion", "Vasile" };
-            names = null;
+            string[] names = null;
             //When
-            var enumerator = names.SelectMany(x => new[] {x+"1"}).GetEnumerator();
+            var enumerator = names.SelectMany(x => new[] { x + "1" }).GetEnumerator();
             var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
             //Then
             Assert.Equal("source", exception.ParamName);
@@ -199,5 +199,128 @@ namespace ExtensionMethods_Facts
             //Then
             Assert.Equal("selector", exception.ParamName);
         }
+
+        [Fact]
+        public void Test_Where_ExtMethod_Should_return_Positive_Numbers_from_Array()
+        {
+            //Given
+            var array = new int[4] { -1, 2, 3, -4 };
+            //When
+            var enumerable = array.Where(n => n > 0);
+            //Then
+            Assert.Equal(new[] { 2, 3 }, enumerable);
+        }
+
+        [Fact]
+        public void Test_Where_ExtMethod_Should_Throw_Exception_When_Object_is_NULL()
+        {
+            //Given
+            int[] array = null;
+            //When
+            var enumerator = array.Where(x => x > 1).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Where_ExtMethod_Should_Throw_Exception_When_Predicate_is_NULL()
+        {
+            //Given
+            int[] array = new int[3] { 1, 2, 3 };
+            //When
+            var enumerator = array.Where(null).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("selector", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Correctly_Return_Dictionary_Of_Int_Pair()
+        {
+            //Given
+            var array = new int[4] { 1, 2, 3, 4 };
+            //When
+            var dictionary = array.ToDictionary(n => n.GetHashCode(), m => m.GetHashCode());
+            var enumerator = dictionary.GetEnumerator();
+            enumerator.MoveNext();
+            //Then
+            Assert.Equal(new KeyValuePair<int, int>(1, 1), enumerator.Current);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Throw_Exception_When_Object_Is_NULL()
+        {
+            //Given
+            int[] array = null;
+            //When
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => array.ToDictionary(n => n.GetHashCode(),
+                                         m => m.GetHashCode()));
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Throw_Exception_When_Key_Produced_Is_NULL()
+        {
+            //Given
+            int[] array = new int[3] { 1, 2, 3 };
+            //When
+            string KeySelector()
+            {
+                return null;
+            }
+
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => array.ToDictionary(
+                                         _ => KeySelector(),
+                                         m => m.GetHashCode()));
+            //Then
+            Assert.Equal("key", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Throw_Exception_Key_produced_already_Exists()
+        {
+            //Given
+            int[] array = new int[3] { 1, 1, 1 };
+            //When
+            var exception = Assert.Throws<ArgumentException>(
+                () => array.ToDictionary(
+                                         m => m.GetHashCode(),
+                                         m => m.GetHashCode()));
+            //Then
+            Assert.Equal("Could not add key duplicates!/t", exception.Message);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Throw_Exception_When_ElementSelector_Is_NULL()
+        {
+            //Given
+            int[] array = new int[3] { 1, 2, 3 };
+            //When
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => array.ToDictionary<int,int,string>(
+                                         m => m.GetHashCode(),
+                                         null));
+            //Then
+            Assert.Equal("selector", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_ToDictionary_ExtMethod_Should_Throw_Exception_When_KeySelector_is_NULL()
+        {
+            //Given
+            int[] array = new int[3] { 1, 2, 3 };
+            //When
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => array.ToDictionary<int, string, int>(
+                                         null,
+                                         m => m.GetHashCode()));
+            //Then
+            Assert.Equal("selector", exception.ParamName);
+        }
+
     }
 }
