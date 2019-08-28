@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ExtensionMethods
 {
@@ -22,7 +21,7 @@ namespace ExtensionMethods
             Console.Read();
         }
 
-        static string MethodExample(string name)
+        private static string MethodExample(string name)
         {
             return name + "1";
         }

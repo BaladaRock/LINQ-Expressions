@@ -5,6 +5,23 @@ namespace ExtensionMethods
 {
     public static class Extensions
     {
+        public static TAccumulate Aggregate<TSource, TAccumulate>(
+            this IEnumerable<TSource> source,
+            TAccumulate seed,
+            Func<TAccumulate, TSource, TAccumulate> func)
+        {
+            ThrowNullSourceException(source);
+            ThrowNUllAggregateFunction(func);
+
+            TAccumulate accumulator = seed;
+            foreach (var element in source)
+            {
+                accumulator = func(accumulator, element);
+            }
+
+            return accumulator;
+        }
+
         public static bool All<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
@@ -53,6 +70,27 @@ namespace ExtensionMethods
             throw new InvalidOperationException(message: "No IEnumerable<TSource> element satisfies delegate condition!/t");
         }
 
+        public static IEnumerable<TResult> Join<TOuter, TInner, TKey, TResult>(
+            this IEnumerable<TOuter> outer,
+            IEnumerable<TInner> inner,
+            Func<TOuter, TKey> outerKeySelector,
+            Func<TInner, TKey> innerKeySelector,
+            Func<TOuter, TInner, TResult> resultSelector)
+        {
+            ThrowJoinExceptions(outer, inner, outerKeySelector, innerKeySelector, resultSelector);
+
+            foreach (var item in outer)
+            {
+                foreach (var subItem in inner)
+                {
+                    if (subItem.Equals(item))
+                    {
+                        yield return resultSelector(item, subItem);
+                    }
+                }
+            }
+        }
+
         public static IEnumerable<TResult> Select<TSource, TResult>(
             this IEnumerable<TSource> source, Func<TSource, TResult> selector)
         {
@@ -86,15 +124,12 @@ namespace ExtensionMethods
             Func<TSource, TKey> keySelector,
             Func<TSource, TElement> elementSelector)
         {
-            ThrowInputExceptions(source, keySelector, elementSelector);
+            ThrowParamsExceptions(source, keySelector, elementSelector);
 
             var dictionary = new Dictionary<TKey, TElement>();
             foreach (var element in source)
             {
-                var newElement = new KeyValuePair<TKey, TElement>(keySelector(element), elementSelector(element));
-                ThrowKeyExceptions(newElement.Key, dictionary);
-
-                dictionary.Add(newElement.Key, newElement.Value);
+                dictionary.Add(keySelector(element), elementSelector(element));
             }
 
             return dictionary;
@@ -114,23 +149,35 @@ namespace ExtensionMethods
             }
         }
 
-        private static void ThrowInputExceptions<TSource, TKey, TElement>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector)
+        public static IEnumerable<TResult> Zip<TFirst, TSecond, TResult>(
+            this IEnumerable<TFirst> first,
+            IEnumerable<TSecond> second,
+            Func<TFirst, TSecond, TResult> resultSelector)
         {
-            ThrowNullSourceException(source);
-            ThrowNullDelegateException(keySelector);
-            ThrowNullDelegateException(elementSelector);
+            ThrowNullSourceException(first);
+            ThrowNullSourceException(second);
+
+            var firstEnumerator = first.GetEnumerator();
+            var secondEnumerator = second.GetEnumerator();
+
+            while (secondEnumerator.MoveNext() && firstEnumerator.MoveNext())
+            {
+                yield return resultSelector(firstEnumerator.Current, secondEnumerator.Current);
+            }
         }
 
-        private static void ThrowKeyExceptions<TKey, TElement>(TKey key, Dictionary<TKey, TElement> dictionary)
+        private static void ThrowJoinExceptions<TOuter, TInner, TKey, TResult>(
+            IEnumerable<TOuter> outer,
+            IEnumerable<TInner> inner,
+            Func<TOuter, TKey> outerKeySelector,
+            Func<TInner, TKey> innerKeySelector,
+            Func<TOuter, TInner, TResult> resultSelector)
         {
-            ThrowKeyIsNullException(key);
-
-            if (!dictionary.ContainsKey(key))
-            {
-                return;
-            }
-
-            throw new ArgumentException("Could not add key duplicates!/t");
+            ThrowNullSourceException(outer);
+            ThrowNullSourceException(inner);
+            ThrowNullDelegateException(outerKeySelector);
+            ThrowNullDelegateException(innerKeySelector);
+            ThrowNullSelectorException(resultSelector);
         }
 
         private static void ThrowKeyIsNullException<TKey>(TKey key)
@@ -141,6 +188,16 @@ namespace ExtensionMethods
             }
 
             throw new ArgumentNullException(paramName: nameof(key), message: "Key cannot be null!/t");
+        }
+
+        private static void ThrowNUllAggregateFunction<TSource, TAccumulate>(Func<TAccumulate, TSource, TAccumulate> func)
+        {
+            if (func != null)
+            {
+                return;
+            }
+
+            throw new ArgumentNullException(paramName: nameof(func), message: "Function cannot be null!/t");
         }
 
         private static void ThrowNullDelegateException<TSource, TResult>(
@@ -154,6 +211,16 @@ namespace ExtensionMethods
             throw new ArgumentNullException(paramName: nameof(selector), message: "Selector cannot be null!/t");
         }
 
+        private static void ThrowNullSelectorException<TOuter, TInner, TResult>(Func<TOuter, TInner, TResult> resultSelector)
+        {
+            if (resultSelector != null)
+            {
+                return;
+            }
+
+            throw new ArgumentNullException(paramName: nameof(resultSelector), message: "ResultSelector cannot be null!/t");
+        }
+
         private static void ThrowNullSourceException<TSource>(IEnumerable<TSource> source)
         {
             if (source != null)
@@ -162,6 +229,13 @@ namespace ExtensionMethods
             }
 
             throw new ArgumentNullException(paramName: nameof(source), message: "Object cannot be null!/t");
+        }
+
+        private static void ThrowParamsExceptions<TSource, TKey, TElement>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector)
+        {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(keySelector);
+            ThrowNullDelegateException(elementSelector);
         }
     }
 }
