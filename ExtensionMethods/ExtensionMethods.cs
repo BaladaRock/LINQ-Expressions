@@ -78,15 +78,15 @@ namespace ExtensionMethods
             ThrowNullSourceException(first);
             ThrowNullSourceException(second);
 
-            var secondList = new List<TSource>();
+            var secondElements = new HashSet<TSource>(comparer);
             foreach (var item in second)
             {
-                secondList.Add(item);
+                secondElements.Add(item);
             }
 
-            foreach (var item in first.Distinct(comparer))
+            foreach (var item in first)
             {
-                if (!secondList.Contains(item))
+                if (secondElements.Add(item))
                 {
                     yield return item;
                 }
@@ -117,15 +117,15 @@ namespace ExtensionMethods
             ThrowNullSourceException(first);
             ThrowNullSourceException(second);
 
-            var secondList = new List<TSource>();
+            var hashSet = new HashSet<TSource>(comparer);
             foreach (var item in second)
             {
-                secondList.Add(item);
+                hashSet.Add(item);
             }
 
-            foreach (var item in first.Distinct(comparer))
+            foreach (var item in first)
             {
-                if (secondList.Contains(item))
+                if (hashSet.Remove(item))
                 {
                     yield return item;
                 }
@@ -205,16 +205,18 @@ namespace ExtensionMethods
             ThrowNullSourceException(first);
             ThrowNullSourceException(second);
 
-            var elements = new HashSet<TSource>();
-            foreach (var item in first.Distinct(comparer))
+            var hashSet = new HashSet<TSource>(comparer);
+            foreach (var item in first)
             {
-                elements.Add(item);
-                yield return item;
+                if (hashSet.Add(item))
+                {
+                    yield return item;
+                }
             }
 
             foreach (var item in second)
             {
-                if (elements.Add(item))
+                if (hashSet.Add(item))
                 {
                     yield return item;
                 }
