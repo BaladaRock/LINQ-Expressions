@@ -561,7 +561,7 @@ namespace ExtensionMethods_Facts
 
         public int GetHashCode(string obj)
         {
-            return obj.GetHashCode();
+            return obj.ToLower().GetHashCode();
         }
     }
 }
