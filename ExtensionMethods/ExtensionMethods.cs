@@ -54,6 +54,24 @@ namespace ExtensionMethods
             return false;
         }
 
+        public static IEnumerable<TSource> Distinct<TSource>(
+            this IEnumerable<TSource> source,
+            IEqualityComparer<TSource> comparer)
+        {
+            ThrowNullSourceException(source);
+
+            var set = new HashSet<TSource>();
+            foreach (var item in source)
+            {
+                set.Add(item);
+            }
+
+            foreach (var item in set)
+            {
+                yield return item;
+            }
+        }
+
         public static TSource First<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {

@@ -8,6 +8,57 @@ namespace ExtensionMethods_Facts
     public class ExtensionFacts
     {
         [Fact]
+        public void Test_Aggregate_ExtMethod_Should_Return_Max_Number()
+        {
+            //Given
+            var array = new int[3] { 1, 2, 3 };
+            int seed = array[0];
+            //When
+            var maximum = array.Aggregate(seed, (maxValue, current) =>
+                                          current > maxValue ? current : maxValue);
+            //Then
+            Assert.Equal(3, maximum);
+        }
+
+        [Fact]
+        public void Test_Aggregate_ExtMethod_Should_Return_Product_Of_Integers()
+        {
+            //Given
+            var array = new int[3] { 1, 2, 3 };
+            const int seed = 1;
+            //When
+            var product = array.Aggregate(seed, (total, current) => total * current);
+            //Then
+            Assert.Equal(6, product);
+        }
+
+        [Fact]
+        public void Test_Aggregate_ExtMethod_Should_Throw_Exception_When_Func_is_NULL()
+        {
+            //Given
+            const string array = "Andrei";
+            //When
+            string seed = string.Empty;
+            var exception = Assert.Throws<ArgumentNullException>(() => array.Aggregate(seed, null));
+            //Then
+            Assert.Equal("func", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Aggregate_ExtMethod_Should_Throw_Exception_When_Source_is_NULL()
+        {
+            //Given
+            int[] array = null;
+            //When
+            const int seed = 0;
+            Action sumCalculus = () => array.Aggregate(
+                                         seed,
+                                         (now, after) => now + after);
+            //Then
+            Assert.Throws<ArgumentNullException>(sumCalculus);
+        }
+
+        [Fact]
         public void Test_All_ExtMethod_Should_Return_False_When_Condition_is_Not_Satisfied()
         {
             //Given, When
@@ -128,6 +179,65 @@ namespace ExtensionMethods_Facts
             var exception = Assert.Throws<ArgumentNullException>(() => array.First(n => n < 0));
             //Then
             Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Join_ExtMethod_Should_Join_2_Lists_Of_Strings()
+        {
+            //Given
+            List<string> firstList = new List<string>()
+            {
+                "Andrei",
+                "Eusebiu"
+            };
+
+            List<string> secondList = new List<string>()
+            {
+                "Andrei",
+                "AltAndrei"
+            };
+            //When
+            var result = firstList.Join(secondList,
+                                      firstNames => firstNames,
+                                      secondNames => secondNames,
+                                      (firstNames, _) => firstNames
+                                      );
+            //Then
+            Assert.Equal(new List<string> { "Andrei" }, result);
+        }
+
+        [Fact]
+        public void Test_Join_ExtMethod_Should_Join_2_Lists_Of_Strings_Second_Test()
+        {
+            //Given
+            const string firstWord = "ABCD";
+            const string secondWord = "EFCD";
+            //When
+            var result = firstWord.Join(secondWord,
+                                      firstNames => firstNames,
+                                      secondNames => secondNames,
+                                      (firstNames, _) => firstNames
+                                      );
+            //Then
+            Assert.Equal("CD", result);
+        }
+
+        [Fact]
+        public void Test_Join_ExtMethod_Should_Throw_Exception_When_ResultSelector_is_NULL()
+        {
+            //Given
+            const string firstWord = "ABCD";
+            const string secondWord = "EFCD";
+            //When
+            Func<char, char, char> nullFunc = null;
+            var result = firstWord.Join(secondWord,
+                                      firstNames => firstNames,
+                                      secondNames => secondNames,
+                                      nullFunc
+                                      ).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => result.MoveNext());
+            //Then
+            Assert.Equal("resultSelector", exception.ParamName);
         }
 
         [Fact]
@@ -384,127 +494,50 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
-        public void Test_Aggregate_ExtMethod_Should_Return_Product_Of_Integers()
+        public void Test_Distinct_ExtMethod_Should_Return_Distinct_Items_From_IntArray()
         {
             //Given
-            var array = new int[3] { 1, 2, 3 };
-            const int seed = 1;
+            int[] array = { 1, 2, 2, 3, 3, 4, 5 };
             //When
-            var product = array.Aggregate(seed, (total, current) => total * current);
+            var newArray = array.Distinct(new DistinctComparison());
             //Then
-            Assert.Equal(6, product);
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, newArray);
         }
 
         [Fact]
-        public void Test_Aggregate_ExtMethod_Should_Return_Max_Number()
+        public void Test_Distinct_ExtMethod_Should_Work_Correctly_for_Simple_Array()
         {
             //Given
-            var array = new int[3] { 1, 2, 3 };
-            int seed = array[0];
+            int[] array = { 1, 2, 2};
             //When
-            var maximum = array.Aggregate(seed, (maxValue, current) =>
-                                          current > maxValue ? current : maxValue);
+            var newArray = array.Distinct(new DistinctComparison());
             //Then
-            Assert.Equal(3, maximum);
+            Assert.Equal(new[] { 1, 2}, newArray);
         }
 
         [Fact]
-        public void Test_Aggregate_ExtMethod_Should_Throw_Exception_When_Source_is_NULL()
+        public void Test_Distinct_ExtMethod_Should_Throw_Exception_When_Object_is_NULL()
         {
             //Given
             int[] array = null;
             //When
-            const int seed = 0;
-            Action sumCalculus = () => array.Aggregate(
-                                         seed,
-                                         (now, after) => now + after);
+            var enumerator = array.Distinct(new DistinctComparison()).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
             //Then
-            Assert.Throws<ArgumentNullException>(sumCalculus);
+            Assert.Equal("source", exception.ParamName);
         }
+    }
 
-        [Fact]
-        public void Test_Aggregate_ExtMethod_Should_Throw_Exception_When_Func_is_NULL()
+    internal class DistinctComparison : IEqualityComparer<int>
+    {
+        public bool Equals(int x, int y)
         {
-            //Given
-            const string array = "Andrei";
-            //When
-            string seed = string.Empty;
-            var exception = Assert.Throws<ArgumentNullException>(() => array.Aggregate(seed, null));
-            //Then
-            Assert.Equal("func", exception.ParamName);
+            return x == y;
         }
 
-        [Fact]
-        public void Test_Join_ExtMethod_Should_Join_2_Lists_Of_Strings()
+        public int GetHashCode(int obj)
         {
-            //Given
-            List<string> firstList = new List<string>()
-            {
-                "Andrei",
-                "Eusebiu"
-            };
-
-            List<string> secondList = new List<string>()
-            {
-                "Andrei",
-                "AltAndrei"
-            };
-            //When
-            var result = firstList.Join(secondList,
-                                      firstNames => firstNames,
-                                      secondNames => secondNames,
-                                      (firstNames, _) => firstNames
-                                      );
-            //Then
-            Assert.Equal(new List<string> { "Andrei" }, result);
+            return obj.GetHashCode();
         }
-
-        [Fact]
-        public void Test_Join_ExtMethod_Should_Join_2_Lists_Of_Strings_Second_Test()
-        {
-            //Given
-            const string firstWord = "ABCD";
-            const string secondWord = "EFCD";
-            //When
-            var result = firstWord.Join(secondWord,
-                                      firstNames => firstNames,
-                                      secondNames => secondNames,
-                                      (firstNames, _) => firstNames
-                                      );
-            //Then
-            Assert.Equal("CD", result);
-        }
-
-        [Fact]
-        public void Test_Join_ExtMethod_Should_Throw_Exception_When_ResultSelector_is_NULL()
-        {
-            //Given
-            List<string> firstList = new List<string>()
-            {
-                "Andrei",
-                "Eusebiu"
-            };
-
-            List<string> secondList = new List<string>()
-            {
-                "Andrei",
-                "AltAndrei"
-            };
-            //When
-            List<string> ReturnMethod()
-            {
-                return null;
-            }
-
-            var result = firstList.Join(secondList,
-                                      firstNames => firstNames,
-                                      secondNames => secondNames,
-                                      (__, _) => ReturnMethod()
-                                      ).GetEnumerator();
-            var exception = Assert.Throws<ArgumentNullException>(() => result.MoveNext());
-            //Then
-            Assert.Equal("resultSelector", exception.ParamName);
-        }
-
     }
 }
