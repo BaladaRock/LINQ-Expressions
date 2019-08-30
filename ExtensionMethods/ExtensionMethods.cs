@@ -60,15 +60,13 @@ namespace ExtensionMethods
         {
             ThrowNullSourceException(source);
 
-            var set = new HashSet<TSource>();
+            var set = new HashSet<TSource>(comparer);
             foreach (var item in source)
             {
-                set.Add(item);
-            }
-
-            foreach (var item in set)
-            {
-                yield return item;
+                if (set.Add(item))
+                {
+                    yield return item;
+                }
             }
         }
 

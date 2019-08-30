@@ -137,6 +137,51 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
+        public void Test_Distinct_ExtMethod_Should_Return_Distinct_Items_From_IntArray()
+        {
+            //Given
+            int[] array = { 1, 2, 2, 3, 3, 4, 5 };
+            //When
+            var newArray = array.Distinct(new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Distinct_ExtMethod_Should_Throw_Exception_When_Object_is_NULL()
+        {
+            //Given
+            int[] array = null;
+            //When
+            var enumerator = array.Distinct(new DistinctComparison()).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Distinct_ExtMethod_Should_Work_Correctly_for_Simple_Array()
+        {
+            //Given
+            int[] array = { 1, 2, 2 };
+            //When
+            var newArray = array.Distinct(new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 2 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Distinct_ExtMethod_Test_For_Strings()
+        {
+            //Given
+            string[] names = { "Abc", "Bca", "abc", "bca" };
+            //When
+            var newArray = names.Distinct(new StringsComparison());
+            //Then
+            Assert.Equal(new[] { "Abc", "Bca" }, newArray);
+        }
+
+        [Fact]
         public void Test_First_ExtMethod_Should_return_Correct_element()
         {
             //Given, When
@@ -492,40 +537,6 @@ namespace ExtensionMethods_Facts
             //Then
             Assert.Equal("source", exception.ParamName);
         }
-
-        [Fact]
-        public void Test_Distinct_ExtMethod_Should_Return_Distinct_Items_From_IntArray()
-        {
-            //Given
-            int[] array = { 1, 2, 2, 3, 3, 4, 5 };
-            //When
-            var newArray = array.Distinct(new DistinctComparison());
-            //Then
-            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, newArray);
-        }
-
-        [Fact]
-        public void Test_Distinct_ExtMethod_Should_Work_Correctly_for_Simple_Array()
-        {
-            //Given
-            int[] array = { 1, 2, 2};
-            //When
-            var newArray = array.Distinct(new DistinctComparison());
-            //Then
-            Assert.Equal(new[] { 1, 2}, newArray);
-        }
-
-        [Fact]
-        public void Test_Distinct_ExtMethod_Should_Throw_Exception_When_Object_is_NULL()
-        {
-            //Given
-            int[] array = null;
-            //When
-            var enumerator = array.Distinct(new DistinctComparison()).GetEnumerator();
-            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
-            //Then
-            Assert.Equal("source", exception.ParamName);
-        }
     }
 
     internal class DistinctComparison : IEqualityComparer<int>
@@ -536,6 +547,19 @@ namespace ExtensionMethods_Facts
         }
 
         public int GetHashCode(int obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
+
+    internal class StringsComparison : IEqualityComparer<string>
+    {
+        public bool Equals(string x, string y)
+        {
+            return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int GetHashCode(string obj)
         {
             return obj.GetHashCode();
         }
