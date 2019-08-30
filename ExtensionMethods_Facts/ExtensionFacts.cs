@@ -103,7 +103,7 @@ namespace ExtensionMethods_Facts
             //Given, When
             var array = new int[3] { 1, 2, 3 };
             //Then
-            Assert.False(array.All(n => n < 0));
+            Assert.False(array.Any(n => n < 0));
         }
 
         [Fact]
@@ -182,6 +182,43 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
+        public void Test_Except_ExtMethod_for_simple_IntArrays()
+        {
+            //Given
+            int[] firstArray = { 1, 2, 3 };
+            int[] secondArray = { 3, 4, 5 };
+            //When
+            var newArray = firstArray.Except(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 2 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Except_ExtMethod_More_Complex_Case()
+        {
+            //Given
+            int[] firstArray = { 1, 2, 2, 6, 3, 5, 5, 4, 6 };
+            int[] secondArray = { 1, 3, 3, 4, 4, 7 };
+            //When
+            var newArray = firstArray.Except(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 2, 6, 5 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Except_ExtMethod_Should_Throw_Exception_When_One_Enumerable_is_NULL()
+        {
+            //Given
+            int[] firstArray = new int[2] { 4, 5 };
+            int[] secondArray = null;
+            //When
+            var enumerator = firstArray.Except(secondArray, new DistinctComparison()).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
         public void Test_First_ExtMethod_Should_return_Correct_element()
         {
             //Given, When
@@ -222,6 +259,43 @@ namespace ExtensionMethods_Facts
             array = null;
             //When
             var exception = Assert.Throws<ArgumentNullException>(() => array.First(n => n < 0));
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Intersect_ExtMethod_for_more_complex_Case()
+        {
+            //Given
+            int[] firstArray = { 1, 3, 3, 4, 2, 5, 5 };
+            int[] secondArray = { 3, 4, 1, 5, 6 };
+            //When
+            var newArray = firstArray.Intersect(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 3, 4, 5 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Intersect_ExtMethod_for_simple_IntArrays()
+        {
+            //Given
+            int[] firstArray = { 1, 2, 3 };
+            int[] secondArray = { 3, 4, 2 };
+            //When
+            var newArray = firstArray.Intersect(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 2, 3 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Intersect_ExtMethod_Should_Throw_Exception_When_One_Enumerable_is_NULL()
+        {
+            //Given
+            int[] firstArray = new int[2] { 4, 5 };
+            int[] secondArray = null;
+            //When
+            var enumerator = firstArray.Intersect(secondArray, new DistinctComparison()).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
             //Then
             Assert.Equal("source", exception.ParamName);
         }
@@ -437,6 +511,43 @@ namespace ExtensionMethods_Facts
             var exception = Assert.Throws<ArgumentNullException>(
                 () => array.ToDictionary(n => n.GetHashCode(),
                                          m => m.GetHashCode()));
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_Union_ExtMethod_for_simple_IntArrays()
+        {
+            //Given
+            int[] firstArray = { 1, 2, 2 };
+            int[] secondArray = { 3, 4, 2 };
+            //When
+            var newArray = firstArray.Union(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 2, 3, 4 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Union_ExtMethod_IntArrays_More_Complex_Case()
+        {
+            //Given
+            int[] firstArray = { 1, 2, 2, 3, 4, 4, 4 };
+            int[] secondArray = { 3, 4, 5, 5, 6, 4, 8, 7 };
+            //When
+            var newArray = firstArray.Union(secondArray, new DistinctComparison());
+            //Then
+            Assert.Equal(new[] { 1, 2, 3, 4, 5, 6, 8, 7 }, newArray);
+        }
+
+        [Fact]
+        public void Test_Union_ExtMethod_Should_Throw_Exception_When_One_Enumerable_is_NULL()
+        {
+            //Given
+            int[] firstArray = new int[2] { 4, 5 };
+            int[] secondArray = null;
+            //When
+            var enumerator = firstArray.Union(secondArray, new DistinctComparison()).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
             //Then
             Assert.Equal("source", exception.ParamName);
         }

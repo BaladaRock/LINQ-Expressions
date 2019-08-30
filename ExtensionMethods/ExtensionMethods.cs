@@ -70,6 +70,29 @@ namespace ExtensionMethods
             }
         }
 
+        public static IEnumerable<TSource> Except<TSource>(
+            this IEnumerable<TSource> first,
+            IEnumerable<TSource> second,
+            IEqualityComparer<TSource> comparer)
+        {
+            ThrowNullSourceException(first);
+            ThrowNullSourceException(second);
+
+            var secondList = new List<TSource>();
+            foreach (var item in second)
+            {
+                secondList.Add(item);
+            }
+
+            foreach (var item in first.Distinct(comparer))
+            {
+                if (!secondList.Contains(item))
+                {
+                    yield return item;
+                }
+            }
+        }
+
         public static TSource First<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
@@ -84,6 +107,29 @@ namespace ExtensionMethods
             }
 
             throw new InvalidOperationException(message: "No IEnumerable<TSource> element satisfies delegate condition!/t");
+        }
+
+        public static IEnumerable<TSource> Intersect<TSource>(
+            this IEnumerable<TSource> first,
+            IEnumerable<TSource> second,
+            IEqualityComparer<TSource> comparer)
+        {
+            ThrowNullSourceException(first);
+            ThrowNullSourceException(second);
+
+            var secondList = new List<TSource>();
+            foreach (var item in second)
+            {
+                secondList.Add(item);
+            }
+
+            foreach (var item in first.Distinct(comparer))
+            {
+                if (secondList.Contains(item))
+                {
+                    yield return item;
+                }
+            }
         }
 
         public static IEnumerable<TResult> Join<TOuter, TInner, TKey, TResult>(
@@ -149,6 +195,30 @@ namespace ExtensionMethods
             }
 
             return dictionary;
+        }
+
+        public static IEnumerable<TSource> Union<TSource>(
+            this IEnumerable<TSource> first,
+            IEnumerable<TSource> second,
+            IEqualityComparer<TSource> comparer)
+        {
+            ThrowNullSourceException(first);
+            ThrowNullSourceException(second);
+
+            var elements = new HashSet<TSource>();
+            foreach (var item in first.Distinct(comparer))
+            {
+                elements.Add(item);
+                yield return item;
+            }
+
+            foreach (var item in second)
+            {
+                if (elements.Add(item))
+                {
+                    yield return item;
+                }
+            }
         }
 
         public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
