@@ -11,7 +11,7 @@ namespace ExtensionMethods
             Func<TAccumulate, TSource, TAccumulate> func)
         {
             ThrowNullSourceException(source);
-            ThrowNUllAggregateFunction(func);
+            ThrowNullAggregateFunction(func);
 
             TAccumulate accumulator = seed;
             foreach (var element in source)
@@ -78,11 +78,7 @@ namespace ExtensionMethods
             ThrowNullSourceException(first);
             ThrowNullSourceException(second);
 
-            var secondElements = new HashSet<TSource>(comparer);
-            foreach (var item in second)
-            {
-                secondElements.Add(item);
-            }
+            var secondElements = new HashSet<TSource>(second, comparer);
 
             foreach (var item in first)
             {
@@ -109,6 +105,34 @@ namespace ExtensionMethods
             throw new InvalidOperationException(message: "No IEnumerable<TSource> element satisfies delegate condition!/t");
         }
 
+        public static IEnumerable<TResult> GroupBy<TSource, TKey, TElement, TResult>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TSource, TElement> elementSelector,
+            Func<TKey, IEnumerable<TElement>, TResult> resultSelector,
+            IEqualityComparer<TKey> comparer)
+        {
+            ThrowGroupByExceptions(source, keySelector, elementSelector, resultSelector);
+
+            var dictionary = new Dictionary<TKey, List<TElement>>(comparer);
+
+            foreach (var item in source)
+            {
+                var newKey = keySelector(item);
+                var newElement = elementSelector(item);
+
+                if (!dictionary.TryAdd(newKey, new List<TElement>() { newElement }))
+                {
+                    dictionary[newKey].Add(newElement);
+                }
+            }
+
+            foreach (var key in dictionary.Keys)
+            {
+                yield return resultSelector(key, dictionary[key]);
+            }
+        }
+
         public static IEnumerable<TSource> Intersect<TSource>(
             this IEnumerable<TSource> first,
             IEnumerable<TSource> second,
@@ -117,11 +141,7 @@ namespace ExtensionMethods
             ThrowNullSourceException(first);
             ThrowNullSourceException(second);
 
-            var hashSet = new HashSet<TSource>(comparer);
-            foreach (var item in second)
-            {
-                hashSet.Add(item);
-            }
+            var hashSet = new HashSet<TSource>(second, comparer);
 
             foreach (var item in first)
             {
@@ -254,6 +274,18 @@ namespace ExtensionMethods
             }
         }
 
+        private static void ThrowGroupByExceptions<TSource, TKey, TElement, TResult>(
+            IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TSource, TElement> elementSelector,
+            Func<TKey, IEnumerable<TElement>, TResult> resultSelector)
+        {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(keySelector);
+            ThrowNullDelegateException(elementSelector);
+            ThrowNullSelectorException(resultSelector);
+        }
+
         private static void ThrowJoinExceptions<TOuter, TInner, TKey, TResult>(
             IEnumerable<TOuter> outer,
             IEnumerable<TInner> inner,
@@ -278,7 +310,7 @@ namespace ExtensionMethods
             throw new ArgumentNullException(paramName: nameof(key), message: "Key cannot be null!/t");
         }
 
-        private static void ThrowNUllAggregateFunction<TSource, TAccumulate>(Func<TAccumulate, TSource, TAccumulate> func)
+        private static void ThrowNullAggregateFunction<TSource, TAccumulate>(Func<TAccumulate, TSource, TAccumulate> func)
         {
             if (func != null)
             {

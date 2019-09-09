@@ -264,6 +264,73 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
+        public void Test_GroupBy_ExtMethod_Should_Correctly_Use_Comparer_()
+        {
+            //Given
+            string[] names = new string[] { "Andrei", "alex", "Vasile", "Vasi" };
+            //When
+            var groupedNames = names.GroupBy(m => m[0].ToString(),
+                                             n => n,
+                                             (_, enumerable) => string.Join(",", enumerable),
+                                             StringComparer.OrdinalIgnoreCase);
+            //Then
+            Assert.Equal(new[] {
+                    "Andrei,alex",
+                    "Vasile,Vasi"
+                },
+                groupedNames);
+        }
+
+        [Fact]
+        public void Test_GroupBy_ExtMethod_Should_Group_Strings_By_Initials()
+        {
+            //Given
+            string[] names = new string[] { "Andrei", "Alex", "Vasile", "Vasi" };
+            //When
+            var groupedNames = names.GroupBy(m => m[0].ToString(),
+                                             n => n,
+                                             (_, enumerable) => string.Join(",", enumerable),
+                                             StringComparer.Ordinal);
+            //Then
+            Assert.Equal(new[] {
+                    "Andrei,Alex",
+                    "Vasile,Vasi"
+                },
+                groupedNames);
+        }
+
+        [Fact]
+        public void Test_GroupBy_ExtMethod_Should_Throw_Exception_When_Selector_is_NULL()
+        {
+            //Given
+            string[] names = new string[] { "Andrei", "alex", "Vasile", "Vasi" };
+            Func<string, string> keySelector = null;
+            //When
+            var enumerator = names.GroupBy(m => m[0].ToString(),
+                                       keySelector,
+                                       (_, enumerable) => string.Join(",", enumerable),
+                                       StringComparer.OrdinalIgnoreCase).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("selector", exception.ParamName);
+        }
+
+        [Fact]
+        public void Test_GroupBy_ExtMethod_Should_Throw_Exception_When_Source_is_NULL()
+        {
+            //Given
+            string[] names = null;
+            //When
+            var enumerator = names.GroupBy(m => m[0].ToString(),
+                                         n => n,
+                                         (_, enumerable) => string.Join(",", enumerable),
+                                         StringComparer.OrdinalIgnoreCase).GetEnumerator();
+            var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
+            //Then
+            Assert.Equal("source", exception.ParamName);
+        }
+
+        [Fact]
         public void Test_Intersect_ExtMethod_for_more_complex_Case()
         {
             //Given
