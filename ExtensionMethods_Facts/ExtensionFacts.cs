@@ -427,6 +427,40 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
+        public void Test_OrderBy_ExtMethod_Should_Sort_IntArray_in_AscendingOrder()
+        {
+            //Given
+            int[] numbers = new int[] { 4, 2, 3, 1 };
+            //When
+            var sortedArray = numbers.OrderBy(i => i, new CompareIntegers());
+            //Then
+            Assert.Equal(new[] { 1, 2, 3, 4 }, sortedArray);
+        }
+
+        [Fact]
+        public void Test_OrderBy_ExtMethod_Should_Apply_KeySelector_on_Strings()
+        {
+            //Given
+            string[] names = new string[] { "A", "a", "Aa", "B" };
+            //When
+            var sortedNames = names.OrderBy(word => word.ToLower(), StringComparer.OrdinalIgnoreCase);
+            //Then
+            Assert.Equal(new[] { "A", "a", "Aa", "B" }, sortedNames);
+        }
+
+        [Fact]
+        public void Test_ThenBy_ExtMethod_Should_Add_Secondary_Sort_on_IntArray()
+        {
+            //Given
+            int[] numbers = new int[] { 8, 5, 1, 2 };
+            //When
+            var sortedArray = numbers.OrderBy(i => i, new CompareIntegers())
+                                     .ThenBy(i => i % 2, new CompareIntegers());
+            //Then
+            Assert.Equal(new[] { 1, 5, 2, 8 }, sortedArray);
+        }
+
+        [Fact]
         public void Test_Select_ExtMethod_Should_return_ZeroValues_from_IntArray()
         {
             //Given
@@ -714,6 +748,14 @@ namespace ExtensionMethods_Facts
             var exception = Assert.Throws<ArgumentNullException>(() => enumerator.MoveNext());
             //Then
             Assert.Equal("source", exception.ParamName);
+        }
+    }
+
+    internal class CompareIntegers : IComparer<int>
+    {
+        public int Compare(int x, int y)
+        {
+            return x.CompareTo(y);
         }
     }
 

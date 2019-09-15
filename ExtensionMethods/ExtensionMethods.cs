@@ -165,12 +165,21 @@ namespace ExtensionMethods
             {
                 foreach (var subItem in inner)
                 {
-                    if (subItem.Equals(item))
+                    if (innerKeySelector(subItem).Equals(outerKeySelector(item)))
                     {
                         yield return resultSelector(item, subItem);
                     }
                 }
             }
+        }
+
+        public static System.Linq.IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            IComparer<TKey> comparer)
+            where TSource : IComparable<TSource>
+        {
+            return new SortedSequence<TSource, TKey>(source, keySelector, comparer);
         }
 
         public static IEnumerable<TResult> Select<TSource, TResult>(
@@ -199,6 +208,14 @@ namespace ExtensionMethods
                     yield return element;
                 }
             }
+        }
+
+        public static System.Linq.IOrderedEnumerable<TSource> ThenBy<TSource, TKey>(
+            this System.Linq.IOrderedEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            IComparer<TKey> comparer)
+        {
+            return source.CreateOrderedEnumerable(keySelector, comparer, false);
         }
 
         public static Dictionary<TKey, TElement> ToDictionary<TSource, TKey, TElement>(
