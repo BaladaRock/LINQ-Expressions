@@ -177,7 +177,6 @@ namespace ExtensionMethods
             this IEnumerable<TSource> source,
             Func<TSource, TKey> keySelector,
             IComparer<TKey> comparer)
-            where TSource : IComparable<TSource>
         {
             return new SortedSequence<TSource, TKey>(source, keySelector, comparer);
         }

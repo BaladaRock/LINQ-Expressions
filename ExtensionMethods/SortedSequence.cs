@@ -6,9 +6,10 @@ using System.Linq;
 namespace ExtensionMethods
 {
     internal class SortedSequence<TSource, TKey> : IOrderedEnumerable<TSource>
-        where TSource : IComparable<TSource>
     {
-        // private readonly IComparer<TKey> comparer;
+#pragma warning disable S1450 // Private fields only used as local variables in methods should become local variables
+        private readonly IComparer<TKey> comparer;
+#pragma warning restore S1450 // Private fields only used as local variables in methods should become local variables
         private readonly Func<TSource, TKey> keySelector;
         private readonly IEnumerable<TSource> unsortedEnumerable;
 
@@ -17,7 +18,7 @@ namespace ExtensionMethods
             Func<TSource, TKey> keySelector,
             IComparer<TKey> comparer)
         {
-            // this.comparer = comparer;
+            this.comparer = comparer;
             this.keySelector = keySelector;
             unsortedEnumerable = enumerable;
         }
@@ -27,26 +28,43 @@ namespace ExtensionMethods
             IComparer<TKey> comparer,
             bool descending)
         {
-            return this;
+            return new SortedSequence<TSource, TKey>(unsortedEnumerable, keySelector, comparer);
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
-            var newList = unsortedEnumerable.Select(x => keySelector(x));
             var list = unsortedEnumerable.ToList();
-
-            list.Sort();
-            /*var result = new List<TSource>();
-
-            foreach (var element in list)
+            while (list.Count > 0)
             {
-                result.Add(element);
-            }*/
+                TSource minElement = list[0];
+                int minIndex = 0;
+                for (int i = 1; i < list.Count; i++)
+                {
+                    if (comparer.Compare(keySelector(list[i]), keySelector(minElement)) < 0)
+                    {
+                        minElement = list[i];
+                        minIndex = i;
+                    }
+                }
 
-            foreach (var element in list)
-            {
-                yield return element;
+                list.RemoveAt(minIndex);
+                yield return minElement;
             }
+
+            /* var newList = unsortedEnumerable.Select(x => keySelector(x));
+
+             list.Sort();
+             var result = new List<TSource>();
+
+             foreach (var element in list)
+             {
+                 result.Add(element);
+             }
+
+             foreach (var element in list)
+             {
+                 yield return element;
+             }*/
         }
 
         IEnumerator IEnumerable.GetEnumerator()
