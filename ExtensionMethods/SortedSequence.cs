@@ -7,9 +7,7 @@ namespace ExtensionMethods
 {
     internal class SortedSequence<TSource, TKey> : IOrderedEnumerable<TSource>
     {
-#pragma warning disable S1450 // Private fields only used as local variables in methods should become local variables
         private readonly IComparer<TKey> comparer;
-#pragma warning restore S1450 // Private fields only used as local variables in methods should become local variables
         private readonly Func<TSource, TKey> keySelector;
         private readonly IEnumerable<TSource> unsortedEnumerable;
 
@@ -23,7 +21,7 @@ namespace ExtensionMethods
             unsortedEnumerable = enumerable;
         }
 
-        public IOrderedEnumerable<TSource> CreateOrderedEnumerable<TKey>(
+        public IOrderedEnumerable<TSource> CreateOrderedEnumerable(
             Func<TSource, TKey> keySelector,
             IComparer<TKey> comparer,
             bool descending)
@@ -50,21 +48,6 @@ namespace ExtensionMethods
                 list.RemoveAt(minIndex);
                 yield return minElement;
             }
-
-            /* var newList = unsortedEnumerable.Select(x => keySelector(x));
-
-             list.Sort();
-             var result = new List<TSource>();
-
-             foreach (var element in list)
-             {
-                 result.Add(element);
-             }
-
-             foreach (var element in list)
-             {
-                 yield return element;
-             }*/
         }
 
         IEnumerator IEnumerable.GetEnumerator()
