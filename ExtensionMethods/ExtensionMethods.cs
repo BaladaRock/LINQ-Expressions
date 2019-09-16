@@ -178,6 +178,9 @@ namespace ExtensionMethods
             Func<TSource, TKey> keySelector,
             IComparer<TKey> comparer)
         {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(keySelector);
+
             return new SortedSequence<TSource, TKey>(source, keySelector, comparer);
         }
 
@@ -214,6 +217,9 @@ namespace ExtensionMethods
             Func<TSource, TKey> keySelector,
             IComparer<TKey> comparer)
         {
+            ThrowNullSourceException(source);
+            ThrowNullDelegateException(keySelector);
+
             return source.CreateOrderedEnumerable(keySelector, comparer, false);
         }
 

@@ -519,15 +519,32 @@ namespace ExtensionMethods_Facts
         }
 
         [Fact]
-        public void Test_ThenBy_ExtMethod_Should_Add_Secondary_Sort_on_IntArray()
+        public void Test_ThenBy_ExtMethod_Check_that_Secondary_Sort_is_done_Correctly()
         {
             //Given
-            int[] numbers = new int[] { 16, 15, 1, 3 };
+            string[] fruits = new string[] { "grape", "passionfruit", "banana", "mango",
+                                             "orange", "raspberry", "apple", "blueberry" };
             //When
-            var sortedArray = numbers.OrderBy(i => i, new CompareIntegers())
-                                     .ThenBy(i => i % 3, new CompareIntegers());
+            var sortedArray = fruits.OrderBy(i => i.Length, new CompareIntegers())
+                                     .ThenBy(i => i, StringComparer.Ordinal);
             //Then
-            Assert.Equal(new[] { 15, 3, 16, 1 }, sortedArray);
+            Assert.Equal(new[]
+            {
+                "apple", "grape", "mango", "banana", "orange", "blueberry",
+                "raspberry", "passionfruit"
+            }, sortedArray);
+        }
+
+        [Fact]
+        public void Test_ThenBy_ExtMethod_Should_Add_Secondary_Sort_on_StringArray()
+        {
+            //Given
+            string[] names = new string[] { "Andrei", "andrei", "Ana", "ana" };
+            //When
+            var sortedArray = names.OrderBy(i => i, StringComparer.OrdinalIgnoreCase)
+                                     .ThenBy(i => i, StringComparer.Ordinal);
+            //Then
+            Assert.Equal(new[] {"Ana", "ana", "Andrei", "andrei"}, sortedArray);
         }
 
         [Fact]
