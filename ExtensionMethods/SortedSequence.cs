@@ -5,21 +5,29 @@ using System.Linq;
 
 namespace ExtensionMethods
 {
-    internal class SortedSequence<TSource, TExtendedKey> : IOrderedEnumerable<TSource>
+    internal class SortedSequence<TSource, TKey> : IOrderedEnumerable<TSource>
     {
-        private readonly IComparer<TExtendedKey> extendedComparer;
-        private readonly Func<TSource, TExtendedKey> extendedSelector;
+        private readonly List<Projection<TSource, TKey>> criteriaList;
+        private readonly Projection<TSource, TKey> projection;
         private readonly IEnumerable<TSource> unsortedEnumerable;
+        private int criteriaIndex;
 
         public SortedSequence(
             IEnumerable<TSource> enumerable,
-            Func<TSource, TExtendedKey> extendedSelector,
-            IComparer<TExtendedKey> comparer)
+            Func<TSource, TKey> keySelector,
+            IComparer<TKey> comparer)
         {
-            extendedComparer = comparer;
-            this.extendedSelector = extendedSelector;
+            Comparer = comparer;
+            KeySelector = keySelector;
             unsortedEnumerable = enumerable;
+            projection = new Projection<TSource, TKey>(KeySelector, Comparer);
+            criteriaList = new List<Projection<TSource, TKey>> { projection };
+            criteriaIndex = 0;
         }
+
+        public IComparer<TKey> Comparer { get; }
+
+        public Func<TSource, TKey> KeySelector { get; }
 
         public IOrderedEnumerable<TSource> CreateOrderedEnumerable<TKey>(
             Func<TSource, TKey> keySelector,
@@ -31,36 +39,17 @@ namespace ExtensionMethods
                 throw new ArgumentNullException(nameof(keySelector));
             }
 
-            Func<TSource, TExtendedKey> primarySelector = extendedSelector;
-            ExtendedKey<TExtendedKey, TKey> NewSelector(TSource source)
-                    => new ExtendedKey<TExtendedKey, TKey>(
-                    primarySelector(source),
-                    keySelector(source));
-
-            IComparer<ExtendedKey<TExtendedKey, TKey>> newComparer =
-                new ExtendedKey<TExtendedKey, TKey>.MyComparer(extendedComparer, comparer);
-
-            return new SortedSequence<TSource, ExtendedKey<TExtendedKey, TKey>>(
-                unsortedEnumerable, NewSelector, newComparer);
+            return this;
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
-            var list = unsortedEnumerable.ToList();
-            while (list.Count > 0)
+            var elements = unsortedEnumerable.ToList();
+            elements = ApplyListCriteria(ref elements);
+
+            foreach (var item in elements)
             {
-                TSource minElement = list[0];
-
-                for (int i = 1; i < list.Count; i++)
-                {
-                    if (extendedComparer.Compare(extendedSelector(list[i]), extendedSelector(minElement)) < 0)
-                    {
-                        minElement = list[i];
-                    }
-                }
-
-                yield return minElement;
-                list.Remove(minElement);
+                yield return item;
             }
         }
 
@@ -69,44 +58,54 @@ namespace ExtensionMethods
             return GetEnumerator();
         }
 
-        internal struct ExtendedKey<TFirst, TSecond>
+        private List<TSource> ApplyListCriteria(ref List<TSource> elements)
         {
-            internal ExtendedKey(TFirst first, TSecond second)
+            if (criteriaIndex == 0)
             {
-                First = first;
-                Second = second;
+                ApplySortingCriteria(ref elements, criteriaList[0]);
             }
-
-            public TFirst First { get; }
-
-            public TSecond Second { get; }
-
-            internal class MyComparer : IComparer<ExtendedKey<TFirst, TSecond>>
+            else
             {
-                private readonly IComparer<TFirst> primaryComparer;
-                private readonly IComparer<TSecond> secondaryComparer;
-
-                internal MyComparer(
-                    IComparer<TFirst> primaryComparer,
-                    IComparer<TSecond> secondaryComparer)
+                for (int i = 0; i < elements.Count - 1; i++)
                 {
-                    this.primaryComparer = primaryComparer;
-                    this.secondaryComparer = secondaryComparer;
-                }
-
-                public int Compare(
-                    ExtendedKey<TFirst, TSecond> firstValue,
-                    ExtendedKey<TFirst, TSecond> secondValue)
-                {
-                    int primaryResult = primaryComparer.Compare(firstValue.First, secondValue.First);
-                    if (primaryResult != 0)
+                    while (criteriaList[criteriaIndex - 1].Compare(elements[i], elements[i + 1]) == 0)
                     {
-                        return primaryResult;
+                        ApplySortingCriteria(ref elements, criteriaList[criteriaIndex]);
+                        criteriaList[criteriaIndex] = projection;
                     }
-
-                    return secondaryComparer.Compare(firstValue.Second, secondValue.Second);
                 }
             }
+
+            criteriaIndex++;
+            return elements;
+        }
+
+        private void ApplySortingCriteria(ref List<TSource> list, Projection<TSource, TKey> criteria)
+        {
+            for (int i = 0; i < list.Count - 1; i++)
+            {
+                var minimum = i;
+
+                for (int j = i + 1; j < list.Count; j++)
+                {
+                    if (criteria.Compare(list[j], list[minimum]) < 0)
+                    {
+                        minimum = j;
+                    }
+                }
+
+                if (!minimum.Equals(i))
+                {
+                    SwapElements(ref list, i, minimum);
+                }
+            }
+        }
+
+        private void SwapElements(ref List<TSource> list, int oldIndex, int minimumIndex)
+        {
+            TSource temp = list[oldIndex];
+            list[oldIndex] = list[minimumIndex];
+            list[minimumIndex] = temp;
         }
     }
 }
