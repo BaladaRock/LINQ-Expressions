@@ -541,10 +541,23 @@ namespace ExtensionMethods_Facts
             //Given
             string[] names = new string[] { "Andrei", "andrei", "Ana", "ana" };
             //When
-            var sortedArray = names.OrderBy(i => i, StringComparer.OrdinalIgnoreCase)
+            var sortedArray = names.OrderBy(i => i.Length, new CompareIntegers())
                                      .ThenBy(i => i, StringComparer.Ordinal);
             //Then
-            Assert.Equal(new[] {"Ana", "ana", "Andrei", "andrei"}, sortedArray);
+            Assert.Equal(new[] { "ana", "Ana", "andrei", "Andrei" }, sortedArray);
+        }
+
+        [Fact]
+        public void Test_ThenBy_ExtMethod_Should_Correctly_Work_for_3_Consec_Sorters()
+        {
+            //Given
+            string[] names = new string[] { "cristi", "andrei", "Andrei", "Basescu", "Ana", "ana" };
+            //When
+            var sortedArray = names.OrderBy(i => i.Length, new CompareIntegers())
+                                     .ThenBy(i => i, StringComparer.OrdinalIgnoreCase)
+                                     .ThenBy(i => i, StringComparer.Ordinal);
+            //Then
+            Assert.Equal(new[] { "ana", "Ana", "andrei", "Andrei", "cristi", "Basescu" }, sortedArray);
         }
 
         [Fact]

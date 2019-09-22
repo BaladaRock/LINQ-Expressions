@@ -10,7 +10,6 @@ namespace ExtensionMethods
         private readonly List<Projection<TSource, TKey>> criteriaList;
         private readonly Projection<TSource, TKey> projection;
         private readonly IEnumerable<TSource> unsortedEnumerable;
-        private int criteriaIndex;
 
         public SortedSequence(
             IEnumerable<TSource> enumerable,
@@ -22,7 +21,6 @@ namespace ExtensionMethods
             unsortedEnumerable = enumerable;
             projection = new Projection<TSource, TKey>(KeySelector, Comparer);
             criteriaList = new List<Projection<TSource, TKey>> { projection };
-            criteriaIndex = 0;
         }
 
         public IComparer<TKey> Comparer { get; }
@@ -39,13 +37,15 @@ namespace ExtensionMethods
                 throw new ArgumentNullException(nameof(keySelector));
             }
 
+            var list = unsortedEnumerable.ToList();
+            ApplyCriteriaList(ref list);
             return this;
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
             var elements = unsortedEnumerable.ToList();
-            elements = ApplyListCriteria(ref elements);
+            ApplyCriteriaList(ref elements);
 
             foreach (var item in elements)
             {
@@ -58,31 +58,31 @@ namespace ExtensionMethods
             return GetEnumerator();
         }
 
-        private List<TSource> ApplyListCriteria(ref List<TSource> elements)
+        private void ApplyCriteriaList(ref List<TSource> elements)
         {
-            if (criteriaIndex == 0)
+            ApplySortingCriteria(ref elements, criteriaList[0], 0);
+            if (criteriaList.Count == 1)
             {
-                ApplySortingCriteria(ref elements, criteriaList[0]);
+                return;
             }
-            else
+
+            for (int i = 1; i < criteriaList.Count; i++)
             {
-                for (int i = 0; i < elements.Count - 1; i++)
+                for (int j = 0; j < elements.Count - 1; j++)
                 {
-                    while (criteriaList[criteriaIndex - 1].Compare(elements[i], elements[i + 1]) == 0)
+                    if (criteriaList[i].Compare(elements[j], elements[j + 1]) == 0)
                     {
-                        ApplySortingCriteria(ref elements, criteriaList[criteriaIndex]);
-                        criteriaList[criteriaIndex] = projection;
+                        ApplySortingCriteria(ref elements, criteriaList[0], j);
                     }
                 }
             }
 
-            criteriaIndex++;
-            return elements;
+            criteriaList.Add(projection);
         }
 
-        private void ApplySortingCriteria(ref List<TSource> list, Projection<TSource, TKey> criteria)
+        private void ApplySortingCriteria(ref List<TSource> list, Projection<TSource, TKey> criteria, int index)
         {
-            for (int i = 0; i < list.Count - 1; i++)
+            for (int i = index; i < list.Count - 1; i++)
             {
                 var minimum = i;
 

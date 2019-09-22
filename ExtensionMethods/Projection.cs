@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ExtensionMethods
 {
     public class Projection<TSource, TKey> : IComparer<TSource>
     {
-        private readonly Func<TSource, TKey> selector;
         private readonly IComparer<TKey> comparer;
+        private readonly Func<TSource, TKey> selector;
 
         public Projection(
             Func<TSource, TKey> selector,
