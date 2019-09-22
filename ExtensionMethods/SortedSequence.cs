@@ -9,7 +9,7 @@ namespace ExtensionMethods
     {
         private readonly List<Projection<TSource, TKey>> criteriaList;
         private readonly Projection<TSource, TKey> projection;
-        private readonly IEnumerable<TSource> unsortedEnumerable;
+        private IEnumerable<TSource> unsortedEnumerable;
 
         public SortedSequence(
             IEnumerable<TSource> enumerable,
@@ -39,6 +39,8 @@ namespace ExtensionMethods
 
             var list = unsortedEnumerable.ToList();
             ApplyCriteriaList(ref list);
+            unsortedEnumerable = unsortedEnumerable.Intersect(list);
+
             return this;
         }
 
