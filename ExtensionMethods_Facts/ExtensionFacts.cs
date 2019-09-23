@@ -544,7 +544,7 @@ namespace ExtensionMethods_Facts
             var sortedArray = names.OrderBy(i => i.Length, new CompareIntegers())
                                      .ThenBy(i => i, StringComparer.Ordinal);
             //Then
-            Assert.Equal(new[] { "ana", "Ana", "andrei", "Andrei" }, sortedArray);
+            Assert.Equal(new[] { "Ana", "ana", "Andrei", "andrei" }, sortedArray);
         }
 
         [Fact]
@@ -557,7 +557,7 @@ namespace ExtensionMethods_Facts
                                      .ThenBy(i => i, StringComparer.OrdinalIgnoreCase)
                                      .ThenBy(i => i, StringComparer.Ordinal);
             //Then
-            Assert.Equal(new[] { "ana", "Ana", "andrei", "Andrei", "cristi", "Basescu" }, sortedArray);
+            Assert.Equal(new[] { "Ana", "ana", "Andrei", "andrei", "cristi", "Basescu" }, sortedArray);
         }
 
         [Fact]

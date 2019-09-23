@@ -181,7 +181,9 @@ namespace ExtensionMethods
             ThrowNullSourceException(source);
             ThrowNullDelegateException(keySelector);
 
-            return new SortedSequence<TSource, TKey>(source, keySelector, comparer);
+            return new SortedSequence<TSource, TKey>(
+                source,
+                new Projection<TSource, TKey>(keySelector, comparer));
         }
 
         public static IEnumerable<TResult> Select<TSource, TResult>(

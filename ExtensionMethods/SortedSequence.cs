@@ -7,25 +7,16 @@ namespace ExtensionMethods
 {
     internal class SortedSequence<TSource, TKey> : IOrderedEnumerable<TSource>
     {
-        private readonly List<Projection<TSource, TKey>> criteriaList;
-        private readonly Projection<TSource, TKey> projection;
-        private IEnumerable<TSource> unsortedEnumerable;
+        private readonly MultiComparer<TSource> criteria;
+        private readonly IEnumerable<TSource> unsortedEnumerable;
 
         public SortedSequence(
             IEnumerable<TSource> enumerable,
-            Func<TSource, TKey> keySelector,
-            IComparer<TKey> comparer)
+            params IComparer<TSource>[] criteriaList)
         {
-            Comparer = comparer;
-            KeySelector = keySelector;
             unsortedEnumerable = enumerable;
-            projection = new Projection<TSource, TKey>(KeySelector, Comparer);
-            criteriaList = new List<Projection<TSource, TKey>> { projection };
+            criteria = new MultiComparer<TSource>(criteriaList);
         }
-
-        public IComparer<TKey> Comparer { get; }
-
-        public Func<TSource, TKey> KeySelector { get; }
 
         public IOrderedEnumerable<TSource> CreateOrderedEnumerable<TKey>(
             Func<TSource, TKey> keySelector,
@@ -37,54 +28,17 @@ namespace ExtensionMethods
                 throw new ArgumentNullException(nameof(keySelector));
             }
 
-            var list = unsortedEnumerable.ToList();
-            ApplyCriteriaList(ref list);
-            unsortedEnumerable = unsortedEnumerable.Intersect(list);
-
-            return this;
+            var newProjection = new Projection<TSource, TKey>(keySelector, comparer);
+            return new SortedSequence<TSource, TKey>(
+                unsortedEnumerable,
+                criteria,
+                newProjection);
         }
 
         public IEnumerator<TSource> GetEnumerator()
         {
-            var elements = unsortedEnumerable.ToList();
-            ApplyCriteriaList(ref elements);
-
-            foreach (var item in elements)
-            {
-                yield return item;
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        private void ApplyCriteriaList(ref List<TSource> elements)
-        {
-            ApplySortingCriteria(ref elements, criteriaList[0], 0);
-            if (criteriaList.Count == 1)
-            {
-                return;
-            }
-
-            for (int i = 1; i < criteriaList.Count; i++)
-            {
-                for (int j = 0; j < elements.Count - 1; j++)
-                {
-                    if (criteriaList[i].Compare(elements[j], elements[j + 1]) == 0)
-                    {
-                        ApplySortingCriteria(ref elements, criteriaList[0], j);
-                    }
-                }
-            }
-
-            criteriaList.Add(projection);
-        }
-
-        private void ApplySortingCriteria(ref List<TSource> list, Projection<TSource, TKey> criteria, int index)
-        {
-            for (int i = index; i < list.Count - 1; i++)
+            var list = unsortedEnumerable.ToList();
+            for (int i = 0; i < list.Count - 1; i++)
             {
                 var minimum = i;
 
@@ -98,12 +52,19 @@ namespace ExtensionMethods
 
                 if (!minimum.Equals(i))
                 {
-                    SwapElements(ref list, i, minimum);
+                    SwapElements(list, i, minimum);
                 }
             }
+
+            return list.GetEnumerator();
         }
 
-        private void SwapElements(ref List<TSource> list, int oldIndex, int minimumIndex)
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private void SwapElements(List<TSource> list, int oldIndex, int minimumIndex)
         {
             TSource temp = list[oldIndex];
             list[oldIndex] = list[minimumIndex];
